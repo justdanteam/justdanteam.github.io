@@ -241,7 +241,7 @@
       .cell[data-c="8"]{border-right:none;}
       .cell[data-r="8"]{border-bottom:none;}
       .cell.gv{color:var(--given);}
-      .cell.fi{color:var(--accent);}
+
       .cell.sel{background:#7b61ff22;}
       .cell.sn{background:#7b61ff14;}
       .cell.hl{background:#ffffff07;}
@@ -593,7 +593,6 @@ const App=()=>{
     let cls='cell';
     if(given[idx])cls+=' gv';
     else if(variantCells[idx])cls+=' vc';
-    else if(board[idx])cls+=' fi';
     if(idx===sel)cls+=' sel';
     else if(sn&&board[idx]===sn)cls+=' sn';
     else if(r===sr||c===sc||bx===sb)cls+=' hl';
