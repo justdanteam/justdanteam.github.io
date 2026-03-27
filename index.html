@@ -692,7 +692,7 @@ const App=()=>{
 
   const ThemeBtn=()=>(
     <button className="theme-btn" onClick={toggleTheme}>
-      {light?'🌙 Dark':'☀️ Light'}
+      {light?'Theme: Light':'Theme: Dark'}
     </button>
   );
 
@@ -738,8 +738,6 @@ const App=()=>{
       <div className="pane-game" ref={gamePaneRef}>
         <ThemeBtn/>
         <div className="game-inner">
-          <h1 style={{flexShrink:0,marginBottom:1}}>SUDOKU</h1>
-          <div className="sub" style={{flexShrink:0,marginBottom:6}}>Logic Puzzle</div>
           <div className="g-header">
             <button className="back-btn" onClick={()=>setScreen('start')}>← Menu</button>
             <span className="g-badge">{DIFF_EN[difficulty]}</span>
@@ -793,13 +791,9 @@ const App=()=>{
   if(screen==='start'){
     return(
       <div className={orient==='landscape'?'app-landscape':'app-portrait'}>
-        {orient==='landscape'&&(
-          <div className="pane-history"><HistPane/></div>
-        )}
+       
         <StartScreen/>
-        {orient==='portrait'&&(
-          <div className="pane-history"><HistPane/></div>
-        )}
+        
       </div>
     );
   }
