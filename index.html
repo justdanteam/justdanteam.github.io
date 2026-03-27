@@ -159,22 +159,7 @@
         letter-spacing:.18em;text-align:center;margin-bottom:1px;
         line-height:1;
       }
-      .sub{font-size:.58rem;letter-spacing:.32em;color:var(--dim);text-transform:uppercase;text-align:center;margin-bottom:0;}
-
-      .mini-board{
-        display:grid;grid-template-columns:repeat(9,1fr);
-        width:min(150px,38vw);height:min(150px,38vw);
-        border:1px solid var(--border2);border-radius:3px;
-        overflow:hidden;margin:14px 0 10px;opacity:.5;
-      }
-      .mc{
-        border-right:1px solid var(--border);border-bottom:1px solid var(--border);
-        display:flex;align-items:center;justify-content:center;
-        font-size:.4rem;color:var(--dim);background:var(--surface);
-      }
-      .mc.gv{color:var(--given);background:var(--surface2);}
-      .mc[data-c="2"],.mc[data-c="5"]{border-right:1px solid var(--border2);}
-      .mc[data-r="2"],.mc[data-r="5"]{border-bottom:1px solid var(--border2);}
+      .sub{padding-bottom: 10px; font-size:.58rem;letter-spacing:.32em;color:var(--dim);text-transform:uppercase;text-align:center;margin-bottom:0;}
 
       .s-divider{width:100%;height:1px;background:var(--border);margin:18px 0 16px;}
       .s-label{font-size:.56rem;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);margin-bottom:9px;align-self:flex-start;}
@@ -344,7 +329,7 @@ function valid(b,idx,n){
 }
 function solve(b){
   b=[...b];
-  function go(){const i=b.indexOf(0);if(i<0)return true;for(const n of shuffle([1,2,3,4,5,6,7,8,9])){if(valid(b,i,n)){b[i]=n;if(go())return true;b[i]=0;}}return false;}
+  const go = () => {const i=b.indexOf(0);if(i<0)return true;for(const n of shuffle([1,2,3,4,5,6,7,8,9])){if(valid(b,i,n)){b[i]=n;if(go())return true;b[i]=0;}}return false;}
   return go()?b:null;
 }
 function gen(diff){
@@ -373,7 +358,7 @@ function conflicts(b,idx){
 const VCOLS=["#22d3ee","#a3e635","#f472b6","#facc15","#34d399","#818cf8","#aa4b89","#f97316","#c084fc"];
 const DIFF_EN={easy:'Easy',medium:'Medium',hard:'Hard',expert:'Expert'};
 const DIFF_N={easy:1,medium:2,hard:3,expert:4};
-const SK='sudoku_v6';
+const SK='sudoku_safe';
 const load=()=>{try{return JSON.parse(localStorage.getItem(SK));}catch{return null;}};
 const save=s=>{try{localStorage.setItem(SK,JSON.stringify(s));}catch{}};
 const clearSave=()=>{try{localStorage.removeItem(SK);}catch{}};
@@ -388,16 +373,6 @@ function NG({notes}){
     <div className="ng">
       {[1,2,3,4,5,6,7,8,9].map(n=>(
         <div key={n} className={`nd${notes.includes(n)?' on':''}`}>{notes.includes(n)?n:''}</div>
-      ))}
-    </div>
-  );
-}
-
-function MiniBoard({board,given}){
-  return(
-    <div className="mini-board">
-      {board.map((v,i)=>(
-        <div key={i} className={`mc${given[i]?' gv':''}`} data-r={0|(i/9)} data-c={i%9}>{v||''}</div>
       ))}
     </div>
   );
@@ -420,7 +395,7 @@ const App=()=>{
   const gamePaneRef=React.useRef(null);
 
   // toggle theme
-  function toggleTheme(){
+  const toggleTheme = () => {
     const next=!light;
     setLight(next);
     if(next){document.documentElement.classList.add('light');}
@@ -429,7 +404,7 @@ const App=()=>{
   }
 
   React.useEffect(()=>{
-    function measure(){
+    const measure = () => {
       const w=window.innerWidth,h=window.innerHeight;
       setOrient(w>h?'landscape':'portrait');
     }
@@ -439,7 +414,7 @@ const App=()=>{
   },[]);
 
   React.useEffect(()=>{
-    function calc(){
+    const calc = () => {
       if(screen!=='game')return;
       const vw=window.innerWidth,vh=window.innerHeight;
       const isLand=vw>vh;
@@ -469,7 +444,7 @@ const App=()=>{
   const saved=React.useMemo(()=>load(),[]);
   const canCont=saved&&saved.puzzle&&!saved.won;
 
-  function startNew(d){
+  const startNew = (d) => {
     const{puzzle,solved}=gen(d||selDiff);
     const g={
       puzzle,solved,difficulty:d||selDiff,
@@ -483,16 +458,16 @@ const App=()=>{
     setG(g);setScreen('game');
   }
 
-  function contGame(){
+  const contGame = () => {
     const s=load();if(s&&s.puzzle&&!s.won){setG(s);setScreen('game');}
   }
 
-  function doFlash(idxs,type){
+  const doFlash = (idxs,type) => {
     setTimeout(()=>setG(p=>p?{...p,flash:Array(81).fill(null)}:p),550);
     const f=Array(81).fill(null);idxs.forEach(i=>{f[i]=type;});return f;
   }
 
-  function commit(prev,newPartial,action){
+  const commit = (prev,newPartial,action) => {
     const before=snap(prev);
     const next={...prev,...newPartial};
     const after=snap(next);
@@ -500,7 +475,7 @@ const App=()=>{
     return{...next,history:newHistory.slice(-120),ptr:newHistory.length};
   }
 
-  function place(num){
+  const place = (num) => {
     setG(prev=>{
       if(!prev)return prev;
       const{selected,given,board,notes,mode}=prev;
@@ -529,7 +504,7 @@ const App=()=>{
     });
   }
 
-  function del(){
+  const del = () => {
     setG(prev=>{
       if(!prev)return prev;
       const{selected,given,board,notes}=prev;
@@ -542,7 +517,7 @@ const App=()=>{
     });
   }
 
-  function undo(){
+  const undo = () => {
     setG(prev=>{
       if(!prev||prev.ptr<=0)return prev;
       const e=prev.history[prev.ptr-1];
@@ -550,7 +525,7 @@ const App=()=>{
     });
   }
 
-  function redo(){
+  const redo = () => {
     setG(prev=>{
       if(!prev||prev.ptr>=prev.history.length)return prev;
       const e=prev.history[prev.ptr];
@@ -558,7 +533,7 @@ const App=()=>{
     });
   }
 
-  function jumpTo(i){
+  const jumpTo = (i) => {
     setG(prev=>{
       if(!prev)return prev;
       const e=prev.history[i];if(!e)return prev;
@@ -582,7 +557,7 @@ const App=()=>{
     return()=>window.removeEventListener('keydown',h);
   },[screen,G]);
 
-  function cellCls(idx){
+  const cellCls = (idx) => {
     if(!G)return'cell';
     const{board,given,variantCells,selected:sel,flash}=G;
     const r=0|(idx/9),c=idx%9;
@@ -601,7 +576,7 @@ const App=()=>{
     return cls;
   }
 
-  function cellContent(idx){
+  const cellContent = (idx) => {
     if(!G)return null;
     const{board,notes,variantCells}=G;
     const v=board[idx];
@@ -611,7 +586,7 @@ const App=()=>{
     return null;
   }
 
-  function hLabel(action){
+  const hLabel = (action) => {
     if(!action)return null;
     if(action.type==='place')return(
       <span style={{display:'flex',alignItems:'center',gap:4,flex:1}}>
@@ -704,7 +679,6 @@ const App=()=>{
         <div className="sub">Logic Puzzle</div>
         {canCont?(
           <>
-            <MiniBoard board={saved.board} given={saved.given}/>
             <button className="s-btn sec" onClick={contGame}>▶ Continue Game</button>
             <div className="cont-meta">{DIFF_EN[saved.difficulty]} · {saved.board.filter((v,i)=>v&&!saved.given[i]).length} moves made</div>
             <div className="s-divider"/>
