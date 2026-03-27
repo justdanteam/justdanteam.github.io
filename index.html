@@ -248,6 +248,7 @@
       .nd{display:flex;align-items:center;justify-content:center;font-size:calc(var(--cell)*0.18);font-weight:400;color:var(--dim);}
       .nd.on{color:var(--text);}
 
+      /* ── PORTRAIT controls (unchanged) ── */
       .controls{
         display:flex;flex-direction:column;align-items:center;
         width:100%;max-width:600px;
@@ -255,18 +256,29 @@
         margin-top:6px;gap:6px;
       }
 
-      .mode-bar{display:flex;gap:6px;width:100%;}
-      .m-btn{
-        flex:1;padding:8px 2px;
-        border:1px solid var(--border);border-radius:4px;
-        background:var(--surface);color:var(--dim);
-        font-family:inherit;font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
-        cursor:pointer;transition:all .13s;text-align:center;white-space:nowrap;
+      /* ── LANDSCAPE board+controls layout ── */
+      .board-and-controls-landscape{
+        display:flex;flex-direction:row;align-items:center;
+        gap:14px;
+        flex-shrink:0;
       }
-      .m-btn:hover{border-color:var(--border2);color:var(--text);}
-      .m-btn.on{background:var(--surface2);border-color:var(--accent);color:var(--accent);}
+      /* left: board + mode-bar stacked */
+      .board-col{
+        display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;
+      }
+      /* right: numpad + act-row stacked */
+      .side-controls{
+        display:flex;flex-direction:column;gap:6px;
+        flex-shrink:0;
+      }
 
+      /* numpad in side panel: 3 columns */
+      .numpad-side{
+        display:grid;grid-template-columns:repeat(3,1fr);gap:4px;
+      }
+      /* numpad normal (portrait) */
       .numpad{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;width:100%;}
+
       .nk{
         aspect-ratio:1;background:var(--surface);border:1px solid var(--border);border-radius:4px;
         color:var(--text);font-family:'Bebas Neue',sans-serif;
@@ -277,7 +289,11 @@
       .nk:active{transform:scale(.9);background:var(--surface2);}
       .nk:hover{border-color:var(--accent);color:var(--accent);}
 
+      /* act-row in side: vertical stack */
+      .act-col{display:flex;flex-direction:column;gap:4px;}
+      /* act-row normal (portrait) */
       .act-row{display:flex;gap:6px;width:100%;}
+
       .a-btn{
         flex:1;padding:8px 2px;background:var(--surface);border:1px solid var(--border);
         border-radius:4px;color:var(--dim);font-family:inherit;
@@ -286,6 +302,18 @@
       }
       .a-btn:hover:not(:disabled){border-color:var(--border2);color:var(--text);}
       .a-btn:disabled{opacity:.26;cursor:not-allowed;}
+
+      /* mode bar shared */
+      .mode-bar{display:flex;gap:6px;width:100%;}
+      .m-btn{
+        flex:1;padding:8px 2px;
+        border:1px solid var(--border);border-radius:4px;
+        background:var(--surface);color:var(--dim);
+        font-family:inherit;font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
+        cursor:pointer;transition:all .13s;text-align:center;white-space:nowrap;
+      }
+      .m-btn:hover{border-color:var(--border2);color:var(--text);}
+      .m-btn.on{background:var(--surface2);border-color:var(--accent);color:var(--accent);}
 
       .win{
         position:fixed;inset:0;background:var(--win-bg);
@@ -389,12 +417,10 @@ const App=()=>{
   const [G,setG]=React.useState(()=>load()||null);
   const [orient,setOrient]=React.useState(()=>window.innerWidth>window.innerHeight?'landscape':'portrait');
   const [cellPx,setCellPx]=React.useState(52);
-  // theme state — read from html class on init
   const [light,setLight]=React.useState(()=>document.documentElement.classList.contains('light'));
 
   const gamePaneRef=React.useRef(null);
 
-  // toggle theme
   const toggleTheme = () => {
     const next=!light;
     setLight(next);
@@ -423,16 +449,27 @@ const App=()=>{
         const histW=Math.min(320,Math.max(200,vw*0.28));
         availW=vw-histW-40;
         availH=vh-120;
+        // In landscape the numpad sits to the right (3-col, ~3 cells wide + gaps)
+        // Estimate side panel width: cell*3 + gaps ~ cell*3.5
+        // board cell = min(availH/9, (availW - sideW) / 9)
+        // iterate to converge
+        let cell=Math.max(24,Math.min(Math.floor(Math.min(availW*0.7,availH)/9),72));
+        // side panel is ~cell*3 + 4*2 (gaps) + padding
+        const sideW=cell*3+8+24;
+        const boardW=availW-sideW-14; // 14 = gap
+        cell=Math.max(24,Math.min(Math.floor(Math.min(boardW,availH)/9),72));
+        setCellPx(cell);
+        document.documentElement.style.setProperty('--cell',cell+'px');
       }else{
         availW=vw-20;
         availH=vh-200-130;
+        const controlsEst=Math.min(availW/9*1.2+90,160);
+        const boardH=availH-controlsEst;
+        const boardW=availW;
+        const cell=Math.max(24,Math.min(Math.floor(Math.min(boardW,boardH)/9),72));
+        setCellPx(cell);
+        document.documentElement.style.setProperty('--cell',cell+'px');
       }
-      const controlsEst=Math.min(availW/9*1.2+90,160);
-      const boardH=availH-controlsEst;
-      const boardW=availW;
-      const cell=Math.max(24,Math.min(Math.floor(Math.min(boardW,boardH)/9),72));
-      setCellPx(cell);
-      document.documentElement.style.setProperty('--cell',cell+'px');
     }
     calc();
     window.addEventListener('resize',calc);
@@ -704,51 +741,96 @@ const App=()=>{
     </div>
   );
 
+  const ModeBar=({mode})=>(
+    <div className="mode-bar">
+      {[{k:'certain',l:'Certain'},{k:'notes',l:'Notes'},{k:'variant',l:'Guess'}].map(m=>(
+        <button key={m.k} className={`m-btn${mode===m.k?' on':''}`}
+          onClick={()=>setG(p=>p?{...p,mode:m.k}:p)}>{m.l}</button>
+      ))}
+    </div>
+  );
+
+  const Board=({board})=>(
+    <div className="board-wrap" style={{flexShrink:0}}>
+      <div className="board">
+        {board.map((_,idx)=>{
+          const r=0|(idx/9),c=idx%9;
+          return(
+            <div key={idx} className={cellCls(idx)} data-r={r} data-c={c}
+              onPointerDown={e=>{e.preventDefault();setG(p=>p?{...p,selected:idx}:p);}}>
+              {cellContent(idx)}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   const GamePane=()=>{
     if(!G||!G.puzzle)return null;
-    const{board,given,notes,variantCells,selected,mode,difficulty,history,ptr,won,flash}=G;
+    const{board,difficulty,history,ptr,won,mode}=G;
     const canUndo=ptr>0,canRedo=ptr<history.length;
+    const isLand=orient==='landscape';
+
+    // nk size for side panel: match cell size
+    const nkSize=Math.max(24,Math.min(cellPx,56));
+
     return(
       <div className="pane-game" ref={gamePaneRef}>
         <ThemeBtn/>
         <div className="game-inner">
-          <div className="g-header">
+          <div className="g-header" style={{maxWidth: isLand ? 'none' : 600}}>
             <button className="back-btn" onClick={()=>setScreen('start')}>← Menu</button>
             <span className="g-badge">{DIFF_EN[difficulty]}</span>
           </div>
 
-          <div className="board-wrap" style={{flexShrink:0}}>
-            <div className="board">
-              {board.map((_,idx)=>{
-                const r=0|(idx/9),c=idx%9;
-                return(
-                  <div key={idx} className={cellCls(idx)} data-r={r} data-c={c}
-                    onPointerDown={e=>{e.preventDefault();setG(p=>p?{...p,selected:idx}:p);}}>
-                    {cellContent(idx)}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          {isLand ? (
+            /* ── LANDSCAPE: board+mode-bar left, numpad+actions right ── */
+            <div className="board-and-controls-landscape">
+              {/* left column: board + mode bar */}
+              <div className="board-col">
+                <Board board={board}/>
+                
+              </div>
 
-          <div className="controls">
-            <div className="mode-bar">
-              {[{k:'certain',l:'Certain ✓'},{k:'notes',l:'Notes ≡'},{k:'variant',l:'Guess ?'}].map(m=>(
-                <button key={m.k} className={`m-btn${mode===m.k?' on':''}`}
-                  onClick={()=>setG(p=>p?{...p,mode:m.k}:p)}>{m.l}</button>
-              ))}
+              {/* right column: 3×3 numpad + action buttons */}
+              <div className="side-controls">
+                <ModeBar mode={mode}/>
+                <br/>
+                <div className="numpad-side" style={{width: nkSize*3+8}}>
+                  {[1,2,3,4,5,6,7,8,9].map(n=>(
+                    <button key={n} className="nk"
+                      style={{width:nkSize,height:nkSize,fontSize:nkSize*0.45}}
+                      onPointerDown={e=>{e.preventDefault();place(n);}}>{n}</button>
+                  ))}
+                </div>
+                <br/>
+                <div className="act-col" style={{width: nkSize*3+8}}>
+                  <button className="a-btn" style={{flex:'none',padding:'8px 2px'}} disabled={!canUndo} onPointerDown={e=>{e.preventDefault();undo();}}>↩ Undo</button>
+                  <button className="a-btn" style={{flex:'none',padding:'8px 2px'}} disabled={!canRedo} onPointerDown={e=>{e.preventDefault();redo();}}>↪ Redo</button>
+                  <button className="a-btn" style={{flex:'none',padding:'8px 2px'}} onPointerDown={e=>{e.preventDefault();del();}}>✕ Clear</button>
+                </div>
+              </div>
             </div>
-            <div className="numpad">
-              {[1,2,3,4,5,6,7,8,9].map(n=>(
-                <button key={n} className="nk" onPointerDown={e=>{e.preventDefault();place(n);}}>{n}</button>
-              ))}
-            </div>
-            <div className="act-row">
-              <button className="a-btn" disabled={!canUndo} onPointerDown={e=>{e.preventDefault();undo();}}>↩ Undo</button>
-              <button className="a-btn" disabled={!canRedo} onPointerDown={e=>{e.preventDefault();redo();}}>↪ Redo</button>
-              <button className="a-btn" onPointerDown={e=>{e.preventDefault();del();}}>✕ Clear</button>
-            </div>
-          </div>
+          ) : (
+            /* ── PORTRAIT: original layout ── */
+            <>
+              <Board board={board}/>
+              <div className="controls">
+                <ModeBar mode={mode}/>
+                <div className="numpad">
+                  {[1,2,3,4,5,6,7,8,9].map(n=>(
+                    <button key={n} className="nk" onPointerDown={e=>{e.preventDefault();place(n);}}>{n}</button>
+                  ))}
+                </div>
+                <div className="act-row">
+                  <button className="a-btn" disabled={!canUndo} onPointerDown={e=>{e.preventDefault();undo();}}>↩ Undo</button>
+                  <button className="a-btn" disabled={!canRedo} onPointerDown={e=>{e.preventDefault();redo();}}>↪ Redo</button>
+                  <button className="a-btn" onPointerDown={e=>{e.preventDefault();del();}}>✕ Clear</button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {won&&(
@@ -765,9 +847,7 @@ const App=()=>{
   if(screen==='start'){
     return(
       <div className={orient==='landscape'?'app-landscape':'app-portrait'}>
-       
         <StartScreen/>
-        
       </div>
     );
   }
