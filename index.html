@@ -58,7 +58,7 @@
         display:flex;flex-direction:row;width:100%;height:100%;overflow:hidden;
       }
       .app-landscape .pane-history{
-        width:260px;min-width:200px;max-width:320px;
+        width:25%;
         flex-shrink:0;
         height:100%;overflow:hidden;
         border-right:1px solid var(--border);
@@ -67,7 +67,7 @@
       .app-landscape .pane-game{
         flex:1;height:100%;overflow:hidden;
         display:flex;flex-direction:column;align-items:center;justify-content:center;
-        padding:12px 16px;
+        padding: 6px;
         min-width:0;
       }
 
@@ -148,14 +148,14 @@
         display:flex;flex-direction:column;align-items:center;
         width:100%;max-width:380px;
         overflow-y:auto;
-        padding:8px 4px 16px;
+        padding:30px 4px 16px;
       }
       .start-wrap::-webkit-scrollbar{width:3px;}
       .start-wrap::-webkit-scrollbar-thumb{background:var(--border2);}
 
       h1{
         font-family:'Bebas Neue',sans-serif;
-        font-size:clamp(2.4rem,7vw,4.2rem);
+        font-size:clamp(2.0rem,7vw,4.2rem);
         letter-spacing:.18em;text-align:center;margin-bottom:1px;
         line-height:1;
       }
@@ -163,9 +163,9 @@
 
       .s-divider{width:100%;height:1px;background:var(--border);margin:18px 0 16px;}
       .s-label{font-size:.56rem;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);margin-bottom:9px;align-self:flex-start;}
-      .diff-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;width:100%;margin-bottom:10px;}
+      .diff-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;margin-bottom:10px;}
       .d-btn{
-        padding:12px 0;background:var(--surface);border:1px solid var(--border);border-radius:5px;
+        padding:6px 0;background:var(--surface);border:1px solid var(--border);border-radius:5px;
         color:var(--dim);font-family:inherit;font-size:.68rem;letter-spacing:.1em;
         text-transform:uppercase;cursor:pointer;transition:all .15s;
         display:flex;flex-direction:column;align-items:center;gap:5px;
@@ -177,7 +177,7 @@
       .d-btn:hover .d-dot,.d-btn.sel .d-dot{background:var(--accent);}
 
       .s-btn{
-        width:100%;padding:12px 0;border-radius:5px;
+        width:100%;padding:6px 0;border-radius:5px;
         font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.2em;
         cursor:pointer;transition:all .15s;border:none;margin-bottom:8px;
       }
@@ -209,6 +209,7 @@
         color:var(--dim);font-family:inherit;font-size:.58rem;
         letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;
         cursor:pointer;transition:all .15s;
+        margin-bottom: 10px;
       }
       .back-btn:hover{border-color:var(--border2);color:var(--text);}
 
@@ -258,7 +259,7 @@
 
       /* ── LANDSCAPE board+controls layout ── */
       .board-and-controls-landscape{
-        display:flex;flex-direction:row;align-items:center;
+        display:flex;flex-direction:row;align-items:flex-start;
         gap:14px;
         flex-shrink:0;
       }
@@ -295,7 +296,7 @@
       .act-row{display:flex;gap:6px;width:100%;}
 
       .a-btn{
-        flex:1;padding:8px 2px;background:var(--surface);border:1px solid var(--border);
+        flex:1;padding:6px 2px;background:var(--surface);border:1px solid var(--border);
         border-radius:4px;color:var(--dim);font-family:inherit;
         font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
         cursor:pointer;transition:all .13s;white-space:nowrap;
@@ -304,9 +305,11 @@
       .a-btn:disabled{opacity:.26;cursor:not-allowed;}
 
       /* mode bar shared */
-      .mode-bar{display:flex;gap:6px;width:100%;}
+      .mode-bar-vert{display:flex;gap:6px;width:100%;}
+      .mode-bar-horiz{display:flex; flex-direction: column; gap:6px;width:100%;}
+      
       .m-btn{
-        flex:1;padding:8px 2px;
+        flex:1;padding:6px 2px;
         border:1px solid var(--border);border-radius:4px;
         background:var(--surface);color:var(--dim);
         font-family:inherit;font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
@@ -656,17 +659,14 @@ const App=()=>{
   },[G?.ptr]);
 
   const HistPane=()=>{
-    if(!G||!G.puzzle)return(
-      <div className="hist-inner">
-        <div className="hist-head"><span>Move History</span></div>
-        <div style={{color:'var(--dim)',fontSize:'.6rem',marginTop:8}}>No game in progress</div>
-      </div>
-    );
     const{history,ptr,variantLog}=G;
     return(
       <div className="hist-inner">
+         <button className="back-btn" onClick={()=>setScreen('start')}>← Menu</button>
+    
         <div className="hist-head">
           <span>Move History</span>
+         
           <span className="hist-cnt">{ptr} / {history.length}</span>
         </div>
         <div className="hlist" ref={histRef}>
@@ -741,8 +741,8 @@ const App=()=>{
     </div>
   );
 
-  const ModeBar=({mode})=>(
-    <div className="mode-bar">
+  const ModeBar=({mode, isLand})=>(
+    <div className={`${isLand ? 'mode-bar-horiz' : 'mode-bar-vert'}`}>
       {[{k:'certain',l:'Certain'},{k:'notes',l:'Notes'},{k:'variant',l:'Guess'}].map(m=>(
         <button key={m.k} className={`m-btn${mode===m.k?' on':''}`}
           onClick={()=>setG(p=>p?{...p,mode:m.k}:p)}>{m.l}</button>
@@ -777,12 +777,7 @@ const App=()=>{
 
     return(
       <div className="pane-game" ref={gamePaneRef}>
-        <ThemeBtn/>
         <div className="game-inner">
-          <div className="g-header" style={{maxWidth: isLand ? 'none' : 600}}>
-            <button className="back-btn" onClick={()=>setScreen('start')}>← Menu</button>
-            <span className="g-badge">{DIFF_EN[difficulty]}</span>
-          </div>
 
           {isLand ? (
             /* ── LANDSCAPE: board+mode-bar left, numpad+actions right ── */
@@ -794,10 +789,11 @@ const App=()=>{
               </div>
 
               {/* right column: 3×3 numpad + action buttons */}
-              <div className="side-controls">
-                <ModeBar mode={mode}/>
+              <div className="side-controls" style={{width: nkSize*3+8}}>
+                
+                <ModeBar mode={mode} isLand={isLand} />
                 <br/>
-                <div className="numpad-side" style={{width: nkSize*3+8}}>
+                <div className="numpad-side" >
                   {[1,2,3,4,5,6,7,8,9].map(n=>(
                     <button key={n} className="nk"
                       style={{width:nkSize,height:nkSize,fontSize:nkSize*0.45}}
@@ -805,7 +801,7 @@ const App=()=>{
                   ))}
                 </div>
                 <br/>
-                <div className="act-col" style={{width: nkSize*3+8}}>
+                <div className="act-col">
                   <button className="a-btn" style={{flex:'none',padding:'8px 2px'}} disabled={!canUndo} onPointerDown={e=>{e.preventDefault();undo();}}>↩ Undo</button>
                   <button className="a-btn" style={{flex:'none',padding:'8px 2px'}} disabled={!canRedo} onPointerDown={e=>{e.preventDefault();redo();}}>↪ Redo</button>
                   <button className="a-btn" style={{flex:'none',padding:'8px 2px'}} onPointerDown={e=>{e.preventDefault();del();}}>✕ Clear</button>
@@ -817,7 +813,8 @@ const App=()=>{
             <>
               <Board board={board}/>
               <div className="controls">
-                <ModeBar mode={mode}/>
+                
+                <ModeBar mode={mode} isLand={isLand} />
                 <div className="numpad">
                   {[1,2,3,4,5,6,7,8,9].map(n=>(
                     <button key={n} className="nk" onPointerDown={e=>{e.preventDefault();place(n);}}>{n}</button>
