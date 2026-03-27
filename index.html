@@ -11,14 +11,25 @@
     <style>
       *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 
+      /* ── DARK theme (default) ── */
       :root{
         --bg:#0d0d0f; --surface:#16161a; --surface2:#1e1e24;
         --border:#2a2a35; --border2:#3a3a48;
         --text:#e8e8f0; --dim:#6b6b82;
         --accent:#7b61ff; --accent2:#ff6b6b;
         --given:#c8c8e0;
-        /* cell size is computed dynamically via JS, fallback here */
         --cell:52px;
+        --win-bg:#0d0d0fcc;
+      }
+
+      /* ── LIGHT theme ── */
+      html.light{
+        --bg:#f5f5f7; --surface:#ffffff; --surface2:#eeeef2;
+        --border:#d0d0dc; --border2:#b0b0c0;
+        --text:#1a1a2e; --dim:#7878a0;
+        --accent:#5b41e8; --accent2:#e84141;
+        --given:#38385a;
+        --win-bg:#f5f5f7cc;
       }
 
       html,body,#container{
@@ -27,14 +38,20 @@
       body{
         background:var(--bg);color:var(--text);
         font-family:'JetBrains Mono',monospace;
+        transition:background .2s,color .2s;
       }
       #container{display:flex;width:100%;height:100%;}
 
-      /* ═══════════════════════════════════
-         ROOT LAYOUT  –  two panes
-         landscape (vw > vh): side-by-side  →  history | game
-         portrait  (vh > vw): stacked       →  game / history
-      ═══════════════════════════════════ */
+      /* ── THEME TOGGLE BUTTON ── */
+      .theme-btn{
+        position:fixed;top:10px;right:12px;z-index:200;
+        background:var(--surface);border:1px solid var(--border2);border-radius:20px;
+        color:var(--dim);font-family:inherit;font-size:.62rem;letter-spacing:.08em;
+        padding:4px 10px;cursor:pointer;
+        transition:all .15s;
+        display:flex;align-items:center;gap:5px;
+      }
+      .theme-btn:hover{border-color:var(--accent);color:var(--accent);}
 
       /* landscape */
       .app-landscape{
@@ -72,8 +89,7 @@
         overflow:hidden;
       }
 
-      /* history pane — shared inner styles */
-      .pane-history{background:var(--surface);}
+      .pane-history{background:var(--surface);transition:background .2s;}
       .hist-inner{
         display:flex;flex-direction:column;
         height:100%;padding:12px;overflow:hidden;
@@ -109,7 +125,6 @@
       .he-arr{color:var(--dim);}
       .he-mark{color:var(--accent);font-size:.5rem;margin-left:auto;}
 
-      /* variant log — sits below history in pane */
       .vlog{
         flex-shrink:0;
         border-top:1px solid var(--border);
@@ -129,9 +144,6 @@
       .vprev{color:var(--dim);font-size:.56rem;}
       .vnum{font-family:'Bebas Neue',sans-serif;font-size:.95rem;}
 
-      /* ═══════════════════════════════════
-         START SCREEN (centred inside pane-game)
-      ═══════════════════════════════════ */
       .start-wrap{
         display:flex;flex-direction:column;align-items:center;
         width:100%;max-width:380px;
@@ -156,11 +168,11 @@
         overflow:hidden;margin:14px 0 10px;opacity:.5;
       }
       .mc{
-        border-right:1px solid #1c1c22;border-bottom:1px solid #1c1c22;
+        border-right:1px solid var(--border);border-bottom:1px solid var(--border);
         display:flex;align-items:center;justify-content:center;
         font-size:.4rem;color:var(--dim);background:var(--surface);
       }
-      .mc.gv{color:var(--given);background:#1a1a20;}
+      .mc.gv{color:var(--given);background:var(--surface2);}
       .mc[data-c="2"],.mc[data-c="5"]{border-right:1px solid var(--border2);}
       .mc[data-r="2"],.mc[data-r="5"]{border-bottom:1px solid var(--border2);}
 
@@ -191,15 +203,10 @@
       .s-btn:disabled{opacity:.26;cursor:not-allowed;}
       .cont-meta{font-size:.55rem;color:var(--dim);text-align:center;letter-spacing:.07em;margin-top:-3px;margin-bottom:3px;}
 
-      /* ═══════════════════════════════════
-         GAME PANE  –  inner layout
-         fills pane-game, no external scroll
-      ═══════════════════════════════════ */
       .game-inner{
         display:flex;flex-direction:column;align-items:center;
         width:100%;height:100%;
         overflow:hidden;
-        /* gap handled by margins on children */
       }
 
       .g-header{
@@ -220,7 +227,6 @@
       }
       .back-btn:hover{border-color:var(--border2);color:var(--text);}
 
-      /* BOARD — size computed by JS via --cell CSS var */
       .board-wrap{touch-action:none;flex-shrink:0;}
       .board{
         display:grid;
@@ -228,6 +234,7 @@
         grid-template-rows:repeat(9,var(--cell));
         border:2px solid var(--border2);border-radius:4px;overflow:hidden;
         background:var(--surface);user-select:none;-webkit-user-select:none;
+        transition:background .2s;
       }
       .cell{
         width:var(--cell);height:var(--cell);
@@ -244,19 +251,18 @@
 
       .cell.sel{background:#7b61ff22;}
       .cell.sn{background:#7b61ff14;}
-      .cell.hl{background:#ffffff07;}
+      .cell.hl{background:#00000008;}
+      html.light .cell.hl{background:#00000009;}
       .cell.er{background:#ff3b3b20;color:var(--accent2)!important;}
       .cell.rf{animation:rowF .5s;}
       .cell.bf{animation:boxF .5s;}
       @keyframes rowF{0%,100%{background:transparent}30%{background:#ff3b3b35}}
       @keyframes boxF{0%,100%{background:transparent}30%{background:#ff8c0030}}
 
-      /* notes phone-dial */
       .ng{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);width:100%;height:100%;padding:1px;}
       .nd{display:flex;align-items:center;justify-content:center;font-size:calc(var(--cell)*0.18);font-weight:400;color:var(--dim);}
       .nd.on{color:var(--text);}
 
-      /* controls below board */
       .controls{
         display:flex;flex-direction:column;align-items:center;
         width:100%;max-width:600px;
@@ -264,7 +270,6 @@
         margin-top:6px;gap:6px;
       }
 
-      /* mode bar */
       .mode-bar{display:flex;gap:6px;width:100%;}
       .m-btn{
         flex:1;padding:8px 2px;
@@ -276,7 +281,6 @@
       .m-btn:hover{border-color:var(--border2);color:var(--text);}
       .m-btn.on{background:var(--surface2);border-color:var(--accent);color:var(--accent);}
 
-      /* numpad */
       .numpad{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;width:100%;}
       .nk{
         aspect-ratio:1;background:var(--surface);border:1px solid var(--border);border-radius:4px;
@@ -288,7 +292,6 @@
       .nk:active{transform:scale(.9);background:var(--surface2);}
       .nk:hover{border-color:var(--accent);color:var(--accent);}
 
-      /* action row */
       .act-row{display:flex;gap:6px;width:100%;}
       .a-btn{
         flex:1;padding:8px 2px;background:var(--surface);border:1px solid var(--border);
@@ -299,9 +302,8 @@
       .a-btn:hover:not(:disabled){border-color:var(--border2);color:var(--text);}
       .a-btn:disabled{opacity:.26;cursor:not-allowed;}
 
-      /* win overlay */
       .win{
-        position:fixed;inset:0;background:#0d0d0fcc;
+        position:fixed;inset:0;background:var(--win-bg);
         display:flex;flex-direction:column;align-items:center;justify-content:center;
         z-index:999;backdrop-filter:blur(10px);
       }
@@ -322,6 +324,12 @@
   <body>
     <div id="container"></div>
     <script type="text/babel">
+
+// apply saved theme immediately
+(function(){
+  const t=localStorage.getItem('sudoku_theme');
+  if(t==='light')document.documentElement.classList.add('light');
+})();
 
 // ═══════════════════════════════
 //  SUDOKU ENGINE
@@ -362,7 +370,7 @@ function conflicts(b,idx){
   return{row,box};
 }
 
-const VCOLS=['#f97316','#22d3ee','#a3e635','#f472b6','#facc15','#34d399','#fb7185','#818cf8','#fbbf24','#2dd4bf','#e879f9','#4ade80','#f87171','#38bdf8','#c084fc'];
+const VCOLS=["#22d3ee","#a3e635","#f472b6","#facc15","#34d399","#818cf8","#aa4b89","#f97316","#c084fc"];
 const DIFF_EN={easy:'Easy',medium:'Medium',hard:'Hard',expert:'Expert'};
 const DIFF_N={easy:1,medium:2,hard:3,expert:4};
 const SK='sudoku_v6';
@@ -375,8 +383,7 @@ function colI(i){return Array.from({length:9},(_,r)=>r*9+(i%9));}
 function boxI(i){const br=(0|(0|(i/9)/3))*3,bc=(0|(i%9/3))*3;const o=[];for(let r=0;r<3;r++)for(let c=0;c<3;c++)o.push((br+r)*9+(bc+c));return o;}
 function affected(i){return[...new Set([...rowI(i),...colI(i),...boxI(i)])];}
 
-// phone-dial notes grid
-function NG({notes,cellPx}){
+function NG({notes}){
   return(
     <div className="ng">
       {[1,2,3,4,5,6,7,8,9].map(n=>(
@@ -396,7 +403,6 @@ function MiniBoard({board,given}){
   );
 }
 
-// snapshot for undo/redo
 function snap(g){return{board:[...g.board],notes:g.notes.map(a=>[...a]),variantCells:{...g.variantCells},variantLog:[...g.variantLog],variantColorIdx:g.variantColorIdx};}
 
 // ═══════════════════════════════
@@ -406,14 +412,21 @@ const App=()=>{
   const [screen,setScreen]=React.useState('start');
   const [selDiff,setSelDiff]=React.useState('medium');
   const [G,setG]=React.useState(()=>load()||null);
-
-  // viewport orientation: 'landscape' | 'portrait'
   const [orient,setOrient]=React.useState(()=>window.innerWidth>window.innerHeight?'landscape':'portrait');
-  // cell size in px (computed to fit)
   const [cellPx,setCellPx]=React.useState(52);
+  // theme state — read from html class on init
+  const [light,setLight]=React.useState(()=>document.documentElement.classList.contains('light'));
 
-  // refs for size measurement
   const gamePaneRef=React.useRef(null);
+
+  // toggle theme
+  function toggleTheme(){
+    const next=!light;
+    setLight(next);
+    if(next){document.documentElement.classList.add('light');}
+    else{document.documentElement.classList.remove('light');}
+    localStorage.setItem('sudoku_theme',next?'light':'dark');
+  }
 
   React.useEffect(()=>{
     function measure(){
@@ -425,31 +438,23 @@ const App=()=>{
     return()=>window.removeEventListener('resize',measure);
   },[]);
 
-  // compute cell size based on available space in the game pane
   React.useEffect(()=>{
     function calc(){
       if(screen!=='game')return;
       const vw=window.innerWidth,vh=window.innerHeight;
       const isLand=vw>vh;
-
-      // estimate available width/height for the board
-      // landscape: history pane ~260px, game pane = vw-260, padding ~32px each side
-      // portrait:  game pane height ~ vh-200 (history), padding ~16px top
       let availW,availH;
       if(isLand){
         const histW=Math.min(320,Math.max(200,vw*0.28));
-        availW=vw-histW-40; // 20px padding each side
-        availH=vh-120;      // header + controls
+        availW=vw-histW-40;
+        availH=vh-120;
       }else{
         availW=vw-20;
-        availH=vh-200-130;  // history pane + controls height estimate
+        availH=vh-200-130;
       }
-
-      // controls below board: mode (36) + numpad (h≈availW/9) + actions (36) + gaps ~90px total
       const controlsEst=Math.min(availW/9*1.2+90,160);
       const boardH=availH-controlsEst;
       const boardW=availW;
-
       const cell=Math.max(24,Math.min(Math.floor(Math.min(boardW,boardH)/9),72));
       setCellPx(cell);
       document.documentElement.style.setProperty('--cell',cell+'px');
@@ -500,26 +505,22 @@ const App=()=>{
       if(!prev)return prev;
       const{selected,given,board,notes,mode}=prev;
       if(selected===null||given[selected])return prev;
-
       if(mode==='notes'){
         const nn=notes.map(a=>[...a]);
         const cur=nn[selected];
         nn[selected]=cur.includes(num)?cur.filter(n=>n!==num):[...cur,num];
         return commit(prev,{notes:nn},{type:'note',idx:selected,num,row:(0|(selected/9))+1,col:(selected%9)+1});
       }
-
       const nb=[...board];const nn=notes.map(a=>[...a]);
       const nvc={...prev.variantCells};const nvl=[...prev.variantLog];
       let nci=prev.variantColorIdx,color=null;
       nb[selected]=num;nn[selected]=[];
       affected(selected).forEach(i=>{nn[i]=nn[i].filter(n=>n!==num);});
-
       if(mode==='variant'){
         color=VCOLS[nci%VCOLS.length];nci++;
         nvc[selected]=color;
         nvl.push({idx:selected,num,color,prevNotes:[...notes[selected]],row:(0|(selected/9))+1,col:(selected%9)+1});
       }else{delete nvc[selected];}
-
       const{row,box}=conflicts(nb,selected);
       const flash=row||box?doFlash(row?rowI(selected):boxI(selected),row?'row':'box'):prev.flash;
       const won=victory(nb);if(won)clearSave();
@@ -565,7 +566,6 @@ const App=()=>{
     });
   }
 
-  // keyboard
   React.useEffect(()=>{
     const h=e=>{
       if(screen!=='game'||!G)return;
@@ -582,13 +582,11 @@ const App=()=>{
     return()=>window.removeEventListener('keydown',h);
   },[screen,G]);
 
-  // cell rendering
   function cellCls(idx){
     if(!G)return'cell';
     const{board,given,variantCells,selected:sel,flash}=G;
-    const r=0|(idx/9),c=idx%9,bx=(0|(r/3))*3+(0|(c/3));
+    const r=0|(idx/9),c=idx%9;
     const sr=sel!==null?0|(sel/9):-1,sc=sel!==null?sel%9:-1;
-    const sb=sel!==null?(0|(sr/3))*3+(0|(sc/3)):-1;
     const sn=sel!==null?board[sel]:0;
     let cls='cell';
     if(given[idx])cls+=' gv';
@@ -613,7 +611,6 @@ const App=()=>{
     return null;
   }
 
-  // history label
   function hLabel(action){
     if(!action)return null;
     if(action.type==='place')return(
@@ -646,7 +643,6 @@ const App=()=>{
     if(histRef.current){const cur=histRef.current.querySelector('.cur');if(cur)cur.scrollIntoView({block:'nearest'});}
   },[G?.ptr]);
 
-  // ── HISTORY PANE (shared between layouts) ──
   const HistPane=()=>{
     if(!G||!G.puzzle)return(
       <div className="hist-inner">
@@ -694,9 +690,15 @@ const App=()=>{
     );
   };
 
-  // ── START SCREEN ──
+  const ThemeBtn=()=>(
+    <button className="theme-btn" onClick={toggleTheme}>
+      {light?'🌙 Dark':'☀️ Light'}
+    </button>
+  );
+
   const StartScreen=()=>(
     <div className="pane-game">
+      <ThemeBtn/>
       <div className="start-wrap">
         <h1>SUDOKU</h1>
         <div className="sub">Logic Puzzle</div>
@@ -728,13 +730,13 @@ const App=()=>{
     </div>
   );
 
-  // ── GAME PANE content ──
   const GamePane=()=>{
     if(!G||!G.puzzle)return null;
     const{board,given,notes,variantCells,selected,mode,difficulty,history,ptr,won,flash}=G;
     const canUndo=ptr>0,canRedo=ptr<history.length;
     return(
       <div className="pane-game" ref={gamePaneRef}>
+        <ThemeBtn/>
         <div className="game-inner">
           <h1 style={{flexShrink:0,marginBottom:1}}>SUDOKU</h1>
           <div className="sub" style={{flexShrink:0,marginBottom:6}}>Logic Puzzle</div>
@@ -788,7 +790,6 @@ const App=()=>{
     );
   };
 
-  // ── ROOT LAYOUT ──
   if(screen==='start'){
     return(
       <div className={orient==='landscape'?'app-landscape':'app-portrait'}>
@@ -803,7 +804,6 @@ const App=()=>{
     );
   }
 
-  // game screen
   if(orient==='landscape'){
     return(
       <div className="app-landscape">
