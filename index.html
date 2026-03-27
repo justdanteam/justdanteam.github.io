@@ -595,7 +595,7 @@ const App=()=>{
     else if(variantCells[idx])cls+=' vc';
     if(idx===sel)cls+=' sel';
     else if(sn&&board[idx]===sn)cls+=' sn';
-    else if(r===sr||c===sc||bx===sb)cls+=' hl';
+    else if(r===sr||c===sc)cls+=' hl';
     const{row,box}=conflicts(board,idx);
     if(row||box)cls+=' er';
     if(flash[idx]==='row')cls+=' rf';
